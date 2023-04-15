@@ -358,13 +358,19 @@ core.confirm = function(self, e, option, callback)
   -- Close menus.
   self.view:close()
 
+  local cxxindent = { 'public:', 'private:', 'protected:' }
+
   local _pass_1 = function()
     feedkeys.call(keymap.indentkeys(), 'n')
     feedkeys.call('', 'n', function()
       -- Emulate `<C-y>` behavior to save `.` register.
       local ctx = context.new()
       local keys = {}
-      table.insert(keys, keymap.backspace(ctx.cursor_before_line:sub(e:get_offset())))
+      if not vim.tbl_contains(cxxindent, ctx.cursor_before_line) then
+        table.insert(keys, keymap.backspace(ctx.cursor_before_line:sub(e:get_offset())))
+      else
+        table.insert(keys, keymap.backspace(ctx.cursor_before_line))
+      end
       table.insert(keys, e:get_word())
       table.insert(keys, keymap.undobreak())
       feedkeys.call(table.concat(keys, ''), 'in')
@@ -505,8 +511,6 @@ core.confirm = function(self, e, option, callback)
       end))
     end)
   end
-
-  local cxxindent = { 'public:', 'private:', 'protected:' }
   _pass_1()
   if not vim.tbl_contains(cxxindent, e:get_word()) then
     _pass_2()
